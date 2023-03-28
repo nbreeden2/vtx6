@@ -1,0 +1,139 @@
+vtx.com documentation - see vtx.c/vt100.h for implementation details
+ * Is a small utility for setting various DEC VTxxx terminal attributes
+ *  from the CP/M 2.2 Command Line
+ * Is passed one or more parameters that tell it what to do
+ * Parameters are parsed and executed from left to right so setting
+ *  an attribute can affect the next parameters on the command line
+ * Is written for the High Nibble VT132 and S-132 VT Terminal emulators
+ *  which provides capabilities beyond an original DEC VT100 with the
+ *  Advance Video Option installed. Additional it adds features such as
+ *  color and a WiFi modem.
+ *  See https://thehighnibble.com/vt132/#features for details.
+ * Works with the TTY: device in the Desktop UI however not all 
+ *  parameters are supported by the TTY:
+ * Should work with other VT emulators and physical VT terminals
+ *  however what is supported is dependent on the emulator/terminal
+ *
+ * String Parameters from the command line
+ *  ECH[O][+xx] "a string"    - echo string - entire string is upper case
+ *  BAN[NER][+xx] "a string"  - display string as DHDW Banner 
+ *   +UP[PER]
+ *   +LO[WER]
+ *   +SE[NTENCE]
+ *   +CA[PITALS]  
+ *  CRL[F]                - echo a CR/LF to the terminal
+ *  CSE[T]                - echo the characters from 33 to 127  ! to ~
+ *  CEX[XTENDED]          - echo from 33 to 126, 128-255 (extended font)
+ *
+ * Font Parameters: (not all fonts are supported by the terminal).
+ * For VT132, S-132 and Standalone 132 these may require enabling bit 8
+ *   in VT132 setup on page 'Set-up D' Option 7 'Toggle MCS/NRCS'
+ *  UKG0                  - Select the UKG0 font
+ *  UKG1                  - Select the UKG1 font
+ *  USG0                  - Select the UKG0 font
+ *  USG1                  - Select the UKG1 font 
+ *  UKG0                  - Select the UKG0 font
+ *  UKG1                  - Select the UKG1 font 
+ *  G0SP[EC]              - Select the G0SPEC font
+ *  G1SP[EC]              - Select the G1SPEC font
+ *  G0AL[T]               - Select the G0ALT font
+ *  G1AL[T]               - Select the G1ALT font
+ *  G0RO[M]               - Select the G0ROM font
+ *  G1RO[M]               - Select the G1ROM font
+ *
+ * Screen Width Parameters:
+ *  80                    - set the terminal to 80 column mode
+ *  13[2]                 - set the terminal to 132 column mode
+ *
+ * Text Sizes 
+ *  DWS[H]                - use double width single height characters
+ *  SWS[H]                - use single width single height characters
+ *  DHT[OP]               - use double height font top row
+ *  DHB[OT]               - use double height font bottom row
+ *
+ * Text Attributes
+ *  DIM                   - enable the DIM attribute
+ *  BOL[D]                - enable the BOLD attribute
+ *  ITA[LIC]              - enable the ITALIC attribute
+ *  REV[ERSE]             - enable the REVERSE attribute
+ *  BLI[NK]               - enable the BLINK attribute
+ *
+ * Screen Controls
+ *  CLS                   - clear the screen, don't reset attributes
+ *  RES[ET]               - reset text attributes to default
+ *  INI[T]                - reset text attributes and colors to White/Black
+ *  BGR[ESET]             - reset the background color to black
+ *
+ * Color Controls 
+ *  FG <color>             - Set the foreground color
+ *  BG <color>             - Set the background color
+ * Where a <color> is:
+ *  BLA[CK][+]
+ *  RED[+]
+ *  GRE[EN][+]
+ *  YEL[LOW][+]
+ *  BLU[E][+]
+ *  MAG[ENTA][+]
+ *  CYA[N][+]
+ *  WHI[TE][+]
+ * Adding a '+' to a color will select the bright version:  BLU+ YEL+ GRE+
+ *
+ * Character/Line/Position commands
+ *  DOCR                   - send a carriage return to the terminal
+ *  DOLF                   - send a line feed to the terminal
+ *  DOFF                   - send a form feed to the terminal
+ *  DOXX value             - send value as character to the terminal
+ *    DOXX 7               - Will ring the bell <CTRL>G
+ *  CRLF                   - Send a CR/LF to the terminal
+ *  SETP[OSITION] x,y      - Set the cursor position
+ *    SETP 10,20           - Cursor to Row 10 column 20
+ *                         - At the command line wrap in quotes: SETP "10,20"
+ *
+ * Flow Controls
+ *   PAU[SE]               - Will pause waiting for a key press
+ *   SLE[EP] value         - Sleep - (SLE 20) will sleep 1 second (depends on CPU speed)
+ *   LOO[P]                - Set loop flag - Will run all the commands in a continuous loop
+ *
+ * Keyboard LED Control
+ *   L1, L2 and L3 are mapped to the 3 PC keyboard LEDs for <Num Lock>, <Caps Lock> and 
+ *      <Scroll Lock> (if present)
+ *   LEDS[OFF]             - All three LEDs off 
+ *   LED1                  - LED 1 On
+ *   LED2                  - LED 2 On
+ *   LED3                  - LED 3 On
+ *   LED4                  - LED 4 On - the VT132/S-132 don't have an LED 4
+ *
+ * Command file
+ *  FIL[E] FILE.CMD        - A file with one or more commands may be passed to vtx.com
+ *    Each line is one and only one complete command
+ *    I.E.  INIT
+ *          FG RED+
+ *          BGRESET
+ *          CLS
+ *          BOLD
+ *          SETP 10,20
+ *          ECHO Hello World!
+ *          BANN Hello World!
+ *          LOOP
+ *    If the command "LOOP" is found in the file the commands in the file will be repeated
+ *      in an infinite loop.
+ *
+ * Command Line Examples under CP/M 2.2:
+ *  Set/reset screen colors:
+ *   vtx fg white+ bg blue cls
+ *   vtx fg white+ bg blue bold cls
+ *   vtx init
+ *  Set colors, display two banners
+ *   vtx fg whi+ bg blu cls bann "Hello World!" fg yel+ bann "Hello Moon!"
+ *  Fonts: (VT132 and S-132 only, select  and display fonts)
+ *   vtx init g0al cset g1al cset g0ro cset g1ro cset
+ *  Screen width
+ *   vtx 80
+ *   vtx 132
+ *  Screen width plus color settings:
+ *   vtx 80 fg yel+ bg blu
+ *   vtx 132 fg whi+ bg blu
+ * Command File Example:
+ *   vtx fil stuff.CMD
+ *
+[END] 
