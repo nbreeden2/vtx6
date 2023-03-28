@@ -1,5 +1,5 @@
 /* Used to send various <esc> sequences to a VTxxx terminal
- * Neil Breeden - V0.6 - March 27, 2023
+ * Neil Breeden - V0.6.03.28.2023 - March 28, 2023
  * Build with the BDSC C compiler
  * Requires vt100.h which defines the <esc> strings and functions
  * See vtxhelp.txt for documentation 
@@ -25,11 +25,11 @@ int bgclr; /* was a background color requested ? */
 int i;
 int loop;  /* flag - if true we loop the commands indefinitely */
 
-/* Due to the globals above we include vtx.h here so they 
- *  are in scope. These functions have been broken out
- *  as all source in a single file was too big for the
- *  TE editor.
-*/
+/* Due to the globals above and the lack of an EXTERN directive
+ * we include vtx.h here so they are in scope. These functions
+ * have been broken out as all source in a single file was taking
+ * too long to load on the IMSAI in the TE editor.
+ */
 #include <vtx.h>
 
 /* love me some old school K&R syntax */

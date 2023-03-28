@@ -15,4 +15,8 @@ ECHO LED 3 On
 crlf
 led3
 sleep 20
+#ECHO LED 4 On
+#crlf
+#led4
+#sleep 20
 loop

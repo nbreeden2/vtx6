@@ -1,6 +1,6 @@
 /* VT100.H - Header file to setup defines and functions 
  *   for managing the VT100
- * V1.1 March 27, 2023 - NBBII 
+ * V1.1.03.28.2023 - March 28, 2023 - NBBII 
  * https://thehighnibble.com/vt132/
  */
 
@@ -16,7 +16,7 @@
 
 /*#ifdef VT100DBG
 char *VT100CLR[8];
-initptr(VT100CLR,"Black","Red"    ,"Green","Yellow",
+initPtr(VT100CLR,"Black","Red"    ,"Green","Yellow",
                  "Blue" ,"Magenta","Cyan" ,"White" ,NULL);
 #endif*/
 
@@ -26,17 +26,19 @@ initptr(VT100CLR,"Black","Red"    ,"Green","Yellow",
 #endif
 */
 
+/*
+ * These modifiers are added to the color to control what the color
+ *  will be used for. Yes - this is how the VTxxx implements these.
+ * sColor(GREEN);         will set the character foreground : green
+ * sColor(GREEN+BG);      will set the character background : green
+ * sColor(RED+BRIGHT);    will set the character foreground : bright red
+ * sColor(RED+BG+BRIGHT); will set the character background : bright red
+*/
 #define FG         0  /* Colors are for Foreground */
 #define BG        10  /* Offset for Background     */
 #define BRIGHT    60  /* Offset for bright colors  */
-/*
-   sColor(GREEN);         will set the character foreground : green
-   sColor(GREEN+BG);      will set the character background : green
-   sColor(RED+BRIGHT);    will set the character foreground : bright red
-   sColor(RED+BG+BRIGHT); will set the character background : bright red
-*/
 
-/* Attributes */
+/* Attributes - Some terminal only support a subset of these */
 #define RESET       0   /* VT100 - All  off   */
 #define BOLD        1   /* VT100 - Bold       */
 #define DIM         2   /*       - Dim        */
@@ -71,7 +73,7 @@ initptr(VT100CLR,"Black","Red"    ,"Green","Yellow",
 #define G0ROM     128
 #define G1ROM     129
 
-/* misc stuff */
+/* Background color reset */
 #define BGRESET   140  /* reset the background color to default */
 
 /* LEDs */
@@ -81,11 +83,14 @@ initptr(VT100CLR,"Black","Red"    ,"Green","Yellow",
 #define LED3ON    163
 #define LED4ON    164
 
-
 /* used in vt100.h - left as global for speed */
 char strVT100[15];
 
-/* set both the foreground and background color */
+/* set both the foreground and background color
+ * Examples:
+ *   sColors(WHITE,BLUE);
+ *   sColors(WHITE+BRIGHT,BLUE);
+ */
 sColors(fg,bg)
 int fg,bg;
 {
@@ -94,7 +99,12 @@ int fg,bg;
   /*sleep(VTDELAY);*/
 }
 
-/* set any color */
+/* set any color
+ * Examples:
+ *  sColor(WHITE);        - foreground is white
+ *  sColor(BLUE+BG);      - background is blue
+ *  sColor(WHITE+BRIGHT); - foreground is bright white
+ */
 sColor(clr)
 int clr;
 {
@@ -103,7 +113,13 @@ int clr;
   /*sleep(VTDELAY);*/
 }
 
-/* set attribute */
+/* set attribute
+ * Examples:
+ *  sAttrib(BOLD);    - New text will now be bold
+ *  sAttrib(UKG0);    - New text will use the UKG0 font
+ *  sAttrib(BGRESET); - Set the background color to default (BLACK)
+ *  sAttrib(LED1ON);  - Enable LED 1 on the keyboard
+ */
 sAttrib(at)
 int at;
 {
@@ -133,19 +149,23 @@ int at;
     case G1ALT:   sprintf(strVT100,"%c)1",0x1B);    break;
     case G0ROM:   sprintf(strVT100,"%c(2",0x1B);    break;
     case G1ROM:   sprintf(strVT100,"%c)2",0x1B);    break;
-    case BGRESET: sprintf(strVT100,"%c[49m",0x1B); break;
-    case LEDOFF:  sprintf(strVT100,"%c[0q",0x1B);  break;
-    case LED1ON:  sprintf(strVT100,"%c[1q",0x1B);  break;
-    case LED2ON:  sprintf(strVT100,"%c[2q",0x1B);  break;
-    case LED3ON:  sprintf(strVT100,"%c[3q",0x1B);  break;
-    case LED4ON:  sprintf(strVT100,"%c[4q",0x1B);  break;
+    case BGRESET: sprintf(strVT100,"%c[49m",0x1B);  break;
+    case LEDOFF:  sprintf(strVT100,"%c[0q",0x1B);   break;
+    case LED1ON:  sprintf(strVT100,"%c[1q",0x1B);   break;
+    case LED2ON:  sprintf(strVT100,"%c[2q",0x1B);   break;
+    case LED3ON:  sprintf(strVT100,"%c[3q",0x1B);   break;
+    case LED4ON:  sprintf(strVT100,"%c[4q",0x1B);   break;
     default:      return;
   }
   puts(strVT100);
   /*sleep(VTDELAY);*/
 }
 
-/* position the cursor */
+/* position the cursor
+ * Examples:
+ *  positionCursor(10,25);  - Row 10, column 25
+ *  positionCursor(15,120); - Row 15, column 120 
+ */
 positionCursor(row,col)
 int row, col;
 {
@@ -199,7 +219,7 @@ int delay;
 
 /* used for debugging and demos */
 #ifdef VT100DBG
-pcolor(clr)
+pColor(clr)
 int clr;
 {
   switch(clr){
@@ -214,30 +234,34 @@ int clr;
   }
 }
 
-pattrib(att)
+pAttrib(att)
 int att;
 {
   switch(att){
-    case RESET:      printf("Reset   "); break;
-    case BOLD:       printf("Bold    "); break;
-    case DIM:        printf("Dim     "); break;
-    case ITALIC:     printf("Italic  "); break;
-    case UNDERSCORE: printf("Underln "); break;
-    case BLINK:      printf("Blink   "); break;
-    case REVERSE:    printf("Rever   "); break;
-    case HIDDEN:     printf("Hidden  "); break;
-    case UKG0:       printf("UK G0   "); break;
-    case UKG1:       printf("UK G1   "); break;
-    case USG0:       printf("US G0   "); break;
-    case USG1:       printf("US G1   "); break;
-    case G0SPEC:     printf("G0 Spec "); break;
-    case G1SPEC:     printf("G1 Spec "); break;
-    case G0ALT:      printf("G0 Alt  "); break;
-    case G1ALT:      printf("G1 Alt  "); break;
-    case G0ROM:      printf("G0 ROM  "); break;
-    case G1ROM:      printf("G1 ROM  "); break;
-    case BGRESET:    printf("BGReset "); break;
+    case RESET:      printf("Reset     "); break;
+    case BOLD:       printf("Bold      "); break;
+    case DIM:        printf("Dim       "); break;
+    case ITALIC:     printf("Italic    "); break;
+    case UNDERSCORE: printf("Underline "); break;
+    case BLINK:      printf("Blink     "); break;
+    case REVERSE:    printf("Reverse   "); break;
+    case HIDDEN:     printf("Hidden    "); break;
+    case UKG0:       printf("UK G0     "); break;
+    case UKG1:       printf("UK G1     "); break;
+    case USG0:       printf("US G0     "); break;
+    case USG1:       printf("US G1     "); break;
+    case G0SPEC:     printf("G0 Spec   "); break;
+    case G1SPEC:     printf("G1 Spec   "); break;
+    case G0ALT:      printf("G0 Alt    "); break;
+    case G1ALT:      printf("G1 Alt    "); break;
+    case G0ROM:      printf("G0 ROM    "); break;
+    case G1ROM:      printf("G1 ROM    "); break;
+    case BGRESET:    printf("BGReset   "); break;
+    case LEDOFF:     printf("LEDs Off  "); break;
+    case LED1ON:     printf("LED 1 On  "); break;
+    case LED2ON:     printf("LED 2 On  "); break;
+    case LED3ON:     printf("LED 3 On  "); break;
+    case LED4ON:     printf("LED 4 On  "); break;
   }
 }
-
 #endif

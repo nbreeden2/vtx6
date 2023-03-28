@@ -1,3 +1,8 @@
+/* Several functions required by vtx.c
+ * Neil Breeden - V0.6.03.28.2023 - March 28, 2023
+ * These were broken out as the TE editor was taking
+ * significant time to load the original larger file.
+ */
 
 /* based on any attributes set in 'str1' update 'str2' */
 int fixCase(str1,str2)
